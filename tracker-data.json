@@ -1,0 +1,47 @@
+{
+  "entries": [
+    {
+      "id": "1741046400000",
+      "weekOf": "2026-03-03",
+      "trialsSold": 0,
+      "trialRevenue": 0,
+      "weeklyRevenue": 12625,
+      "adSpend": 0,
+      "totalMembers": 187,
+      "rollovers": 0,
+      "notes": "Ezy Pay settlement 11 Mar 2026. Chelsea Heights: $7,442 gross / $7,315.73 settled (112 invoices, $1,113 failed). Windsor: $5,183 gross / $5,066.26 settled (75 invoices, $837 failed). Trials sold, ad spend and rollovers not in settlement report — enter manually.",
+      "cac": null,
+      "convRate": null,
+      "roas": null
+    },
+    {
+      "id": "1773608452656",
+      "weekOf": "2026-03-09",
+      "trialsSold": 9,
+      "trialRevenue": 1350,
+      "weeklyRevenue": 0,
+      "adSpend": 965,
+      "totalMembers": 184,
+      "rollovers": 1,
+      "notes": "",
+      "cac": 107.22,
+      "convRate": 11.11,
+      "roas": 1.40
+    },
+    {
+      "id": "1743897600000",
+      "weekOf": "2026-04-06",
+      "trialsSold": 4,
+      "trialRevenue": 600,
+      "weeklyRevenue": 0,
+      "adSpend": 0,
+      "totalMembers": 187,
+      "rollovers": 0,
+      "notes": "Week of 6 Apr 2026. 4 leads, 0 conversions.",
+      "cac": null,
+      "convRate": 0,
+      "roas": null
+    }
+  ],
+  "lastUpdated": "2026-04-06"
+}

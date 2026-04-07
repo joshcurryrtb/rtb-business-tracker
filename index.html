@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b0f;
+    --bg2: #0c1010;
+    --bg3: #0a100a;
+    --border: #131d13;
+    --border2: #1a2a1a;
+    --green: #4ade80;
+    --green2: #34d399;
+    --green-dim: #1f3a1f;
+    --lbl: #7aaa7a;
+    --sub: #5a7a5a;
+    --orange: #fb923c;
+    --yellow: #facc15;
+    --blue: #60a5fa;
+    --purple: #c084fc;
+    --red: #f87171;
+    --text: #c8d0c8;
+    --text-bright: #e8f0e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', 'Courier New', monospace; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-thumb { background: #2a4a2a; }
+
+  /* HEADER */
+  .header { border-bottom: 1px solid #0f1a0f; padding: 0 32px; }
+  .header-inner { max-width: 1200px; margin: 0 auto; }
+  .header-top { display: flex; align-items: flex-end; justify-content: space-between; padding-top: 20px; margin-bottom: 18px; }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 4px; color: var(--text-bright); line-height: 1; }
+  .tagline { font-size: 9px; color: var(--lbl); letter-spacing: 2px; margin-top: 3px; }
+  .header-right { text-align: right; font-size: 10px; }
+  .header-right .weeks { color: var(--lbl); letter-spacing: 1px; }
+  .header-right .total { color: var(--green); margin-top: 3px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; }
+
+  /* TABS */
+  .tabs { display: flex; }
+  .tab { cursor: pointer; padding: 10px 22px; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; border-bottom: 2px solid transparent; transition: all 0.2s; color: #5a7a5a; font-family: 'DM Mono', monospace; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab.active { color: var(--text); border-bottom-color: var(--green); }
+  .tab:hover:not(.active) { color: #8aaa8a; }
+
+  /* MAIN */
+  .main { max-width: 1200px; margin: 0 auto; padding: 28px 32px; }
+  .page { display: none; } .page.active { display: block; }
+
+  /* LOAD BAR */
+  .load-bar { background: var(--bg3); border: 1px solid #1a3a1a; border-left: 3px solid var(--green2); padding: 12px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .load-bar-text { font-size: 10px; color: var(--lbl); letter-spacing: 1px; }
+  .load-bar-text span { color: var(--green2); }
+  .load-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); padding: 20px 22px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
+  .kpi { background: var(--bg2); border: 1px solid var(--border); padding: 20px 22px; }
+  .kpi-label { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .kpi-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 1px; line-height: 1; }
+  .kpi-sub { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 9px; color: var(--sub); }
+  .up { color: var(--green); } .dn { color: var(--red); }
+
+  /* REVENUE CARD */
+  .rev-card { background: var(--bg2); border: 1px solid #162516; display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; margin-bottom: 24px; }
+  .rev-label { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .rev-label span { color: var(--green2); margin-left: 8px; }
+  .rev-val { font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: var(--green2); letter-spacing: 2px; line-height: 1; }
+  .rev-sub { font-size: 9px; color: var(--sub); margin-top: 6px; }
+  .rev-stats { display: flex; gap: 40px; text-align: right; }
+  .rev-stat-label { font-size: 8px; color: var(--lbl); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .rev-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #6a8a6a; letter-spacing: 1px; }
+
+  /* TOTALS BAR */
+  .totals-bar { background: var(--bg3); border: 1px solid #0f1a0f; padding: 12px 20px; margin-bottom: 24px; display: flex; gap: 36px; flex-wrap: wrap; }
+  .stat-item .stat-label { font-size: 8px; color: var(--lbl); letter-spacing: 1px; text-transform: uppercase; }
+  .stat-item .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #6a8a6a; letter-spacing: 1px; margin-top: 2px; }
+
+  /* CHARTS */
+  .charts-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .section-label { font-size: 9px; color: #5a8a5a; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px; }
+  canvas { display: block; }
+
+  /* MONTHLY */
+  .month-table { width: 100%; }
+  .month-header, .month-row-data { display: grid; grid-template-columns: 170px 80px 80px 110px 100px 110px 110px; gap: 8px; padding: 12px 0; border-bottom: 1px solid #0f1a0f; align-items: center; font-size: 12px; }
+  .month-header { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 10px; border-color: #131d13; }
+  .month-row-data:hover { background: var(--bg3); }
+  .conv-bar-bg { background: #0f1a0f; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 5px; width: 80px; }
+  .conv-bar-fill { height: 100%; background: var(--green); border-radius: 2px; }
+
+  /* FORM */
+  .form-wrap { max-width: 560px; }
+  .form-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: var(--text-bright); margin-bottom: 4px; }
+  .form-sub { font-size: 9px; color: var(--lbl); letter-spacing: 1px; margin-bottom: 26px; }
+  .form-grid { display: grid; gap: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--lbl); }
+  .field-hint { font-size: 9px; margin-top: 5px; color: var(--sub); }
+  .field-preview { font-size: 9px; color: var(--green); margin-top: 5px; letter-spacing: 1px; }
+  .divider-label { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--green); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 8px 0 2px; }
+  .inp { background: var(--bg2); border: 1px solid var(--border2); color: var(--text); padding: 10px 14px; font-size: 12px; outline: none; transition: border-color 0.2s; width: 100%; font-family: 'DM Mono', monospace; }
+  .inp:focus { border-color: var(--green); }
+  .inp::placeholder { color: #3a5a3a; }
+  .live-calc { background: var(--bg3); border: 1px solid var(--border); padding: 14px 18px; display: flex; gap: 28px; flex-wrap: wrap; margin-top: 4px; }
+  .calc-item .calc-label { font-size: 8px; color: var(--lbl); letter-spacing: 1px; text-transform: uppercase; }
+  .calc-item .calc-val { font-family: 'Bebas Neue', sans-serif; font-size: 26px; }
+  .calc-item .calc-sub { font-size: 8px; color: var(--sub); }
+  .form-actions { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+  .saved-msg { color: var(--green); font-size: 10px; letter-spacing: 1px; }
+
+  /* HISTORY */
+  .week-header, .week-row-data { display: grid; grid-template-columns: 95px 50px 80px 88px 80px 65px 68px 62px 58px 80px; gap: 5px; padding: 11px 0; border-bottom: 1px solid #0d160d; align-items: center; font-size: 11px; }
+  .week-header { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 10px; border-color: #131d13; }
+  .week-row-data:hover { background: var(--bg3); }
+
+  /* BUTTONS */
+  .btn { border: none; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.2s; }
+  .btn-primary { background: var(--green); color: #050d05; padding: 11px 28px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
+  .btn-primary:hover { background: #86efac; }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--sub); padding: 8px 16px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; }
+  .btn-ghost:hover { border-color: var(--green); color: var(--green); }
+  .btn-ghost.green { border-color: #1a4a1a; color: var(--green2); }
+  .btn-ghost.green:hover { border-color: var(--green2); background: #0a1a0a; }
+  .btn-sm { padding: 5px 12px; font-size: 9px; }
+  .btn-del { background: transparent; border: none; color: #3a5a3a; font-size: 13px; cursor: pointer; padding: 4px 8px; transition: color 0.2s; }
+  .btn-del:hover { color: var(--red); }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 80px 0; }
+  .empty-big { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 5px; color: #0f1a0f; }
+  .empty-sub { font-size: 11px; color: var(--lbl); letter-spacing: 1px; margin-top: 8px; }
+
+  /* PAGE HEADERS */
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: var(--text-bright); margin-bottom: 4px; }
+  .page-sub { font-size: 9px; color: var(--lbl); letter-spacing: 1px; margin-bottom: 24px; }
+
+  .mono-big { font-family: 'Bebas Neue', sans-serif; }
+  .no-data { color: var(--sub); font-size: 11px; text-align: center; padding: 60px 0; }
+  #file-input { display: none; }
+  .import-hint { font-size: 9px; color: var(--sub); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="logo">PERFORMANCE TRACKER</div>
+        <div class="tagline">$150 TRIAL PACKS · MEMBERSHIPS · ROLLOVERS</div>
+      </div>
+      <div class="header-right">
+        <div class="weeks" id="header-meta">0 WEEKS · 0 MONTHS</div>
+        <div class="total" id="header-total">$0 TRIAL REVENUE</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="tab" onclick="showPage('monthly')">Monthly Rollovers</button>
+      <button class="tab" onclick="showPage('add')">Log Week</button>
+      <button class="tab" onclick="showPage('history')">History</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
+
+<div class="main">
+
+  <!-- LOAD BAR — always visible -->
+  <div class="load-bar">
+    <div>
+      <div class="load-bar-text">📂 <span>Load tracker-data.json</span> after Cowork updates it, or save your changes back to the file.</div>
+      <div class="import-hint" style="margin-top:4px">Cowork edits tracker-data.json → click Load File → dashboard updates instantly</div>
+    </div>
+    <div class="load-actions">
+      <button class="btn btn-ghost green btn-sm" onclick="document.getElementById('file-input').click()">📂 Load tracker-data.json</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportJSON()">💾 Save tracker-data.json</button>
+      <span id="last-loaded" style="font-size:9px;color:var(--sub);"></span>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div id="dashboard-empty" class="empty" style="display:none">
+      <div class="empty-big">NO DATA YET</div>
+      <div class="empty-sub">Load your tracker-data.json file or log your first week manually</div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
+        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">📂 LOAD JSON FILE</button>
+        <button class="btn btn-ghost" onclick="showPage('add')">+ LOG MANUALLY</button>
+      </div>
+    </div>
+    <div id="dashboard-content">
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <div id="rev-card-wrap"></div>
+      <div class="totals-bar" id="totals-bar"></div>
+      <div class="charts-2">
+        <div class="card"><div class="section-label">Trials Sold per Week</div><canvas id="chart-trials" height="170"></canvas></div>
+        <div class="card"><div class="section-label">Weekly Revenue</div><canvas id="chart-wrev" height="170"></canvas></div>
+      </div>
+      <div class="charts-2" style="margin-bottom:12px">
+        <div class="card"><div class="section-label">Trials Sold vs Rollovers</div><canvas id="chart-bar" height="160"></canvas></div>
+        <div class="card"><div class="section-label">Trial → Member Conv. Rate %</div><canvas id="chart-conv" height="160"></canvas></div>
+      </div>
+      <div class="charts-2">
+        <div class="card"><div class="section-label">CAC per Trial Sold</div><canvas id="chart-cac" height="150"></canvas></div>
+        <div class="card"><div class="section-label">Active Members (Total)</div><canvas id="chart-members" height="150"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY -->
+  <div id="page-monthly" class="page">
+    <div class="page-title">MONTHLY ROLLOVER REPORT</div>
+    <div class="page-sub">Trial → Membership conversions grouped by month</div>
+    <div id="monthly-content"></div>
+  </div>
+
+  <!-- ADD -->
+  <div id="page-add" class="page">
+    <div class="form-wrap">
+      <div class="form-title" id="form-title">LOG WEEK</div>
+      <div class="form-sub">Each trial = $150 · Rollovers = trials that converted to memberships this week</div>
+      <div class="form-grid">
+        <div>
+          <div class="field-label">Week of *</div>
+          <input type="date" class="inp" id="f-weekOf">
+        </div>
+
+        <div class="divider-label">▸ Trial Pack Sales</div>
+
+        <div class="form-row">
+          <div>
+            <div class="field-label">Trials Sold ($150 each) *</div>
+            <input type="number" class="inp" id="f-trials" placeholder="e.g. 12" oninput="updateCalc()">
+            <div class="field-preview" id="trial-preview"></div>
+          </div>
+          <div>
+            <div class="field-label">Ad Spend ($)</div>
+            <input type="number" class="inp" id="f-adspend" placeholder="e.g. 1800" oninput="updateCalc()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="field-label">Total Active Members</div>
+            <input type="number" class="inp" id="f-members" placeholder="e.g. 84">
+            <div class="field-hint">Your full membership headcount</div>
+          </div>
+          <div>
+            <div class="field-label">Rollovers This Week</div>
+            <input type="number" class="inp" id="f-rollovers" placeholder="e.g. 4" oninput="updateCalc()">
+            <div class="field-hint">Trials that became members</div>
+          </div>
+        </div>
+
+        <div class="divider-label">▸ Weekly Revenue (Separate)</div>
+
+        <div>
+          <div class="field-label">Total Weekly Revenue ($)</div>
+          <input type="number" class="inp" id="f-wrev" placeholder="e.g. 8500">
+          <div class="field-hint">Your total business revenue this week — separate from trial pack sales</div>
+        </div>
+
+        <div class="live-calc" id="live-calc" style="display:none"></div>
+
+        <div>
+          <div class="field-label">Notes (optional)</div>
+          <textarea class="inp" id="f-notes" rows="3" placeholder="Campaigns, promotions, unusual activity..." style="resize:vertical"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">SAVE WEEK</button>
+          <span class="saved-msg" id="saved-msg" style="display:none">✓ SAVED</span>
+          <button class="btn btn-ghost" id="cancel-btn" style="display:none" onclick="cancelEdit()">CANCEL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="page-history" class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div class="page-title">ALL WEEKS</div>
+        <div class="page-sub" id="history-count">0 entries recorded</div>
+      </div>
+      <button class="btn btn-primary" onclick="showPage('add')">+ LOG WEEK</button>
+    </div>
+    <div id="history-content"></div>
+  </div>
+
+</div>
+
+<script>
+const TRIAL_PRICE = 150;
+let entries = [];
+let editId = null;
+let charts = {};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const fmt = (n, type = 'currency') => {
+  if (n == null || isNaN(n)) return '—';
+  if (type === 'currency') return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:0});
+  if (type === 'decimal') return '$' + Number(n).toFixed(2);
+  if (type === 'pct') return Number(n).toFixed(1) + '%';
+  if (type === 'x') return Number(n).toFixed(2) + 'x';
+  return String(n);
+};
+const pct = (c,p) => (!p || p===0) ? null : ((c-p)/p)*100;
+const getMonthKey = d => { const x=new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`; };
+const getMonthLabel = k => { const [y,m]=k.split('-'); return new Date(+y,+m-1,1).toLocaleString('default',{month:'long',year:'numeric'}); };
+const weekLabel = d => { const x=new Date(d+'T00:00:00'); return x.toLocaleString('default',{month:'short'})+' '+x.getDate(); };
+const fmtDate = d => new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+const chartColors = { grid:'#0f1a0f', text:'#7aaa7a', tooltip:{backgroundColor:'#1a1a1a',borderColor:'#2a2a2a',titleColor:'#e0e0e0',bodyColor:'#e0e0e0',titleFont:{family:'DM Mono, monospace',size:11},bodyFont:{family:'DM Mono, monospace',size:11},borderWidth:1} };
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function loadFromStorage() {
+  try { const s=localStorage.getItem('tracker-v2'); if(s) entries=JSON.parse(s); } catch{}
+}
+function saveToStorage() {
+  try { localStorage.setItem('tracker-v2', JSON.stringify(entries)); } catch{}
+}
+
+// ── JSON Import/Export ────────────────────────────────────────────────────────
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.entries && Array.isArray(data.entries)) {
+        entries = data.entries.sort((a,b) => new Date(a.weekOf)-new Date(b.weekOf));
+        saveToStorage();
+        renderAll();
+        document.getElementById('last-loaded').textContent = '✓ Loaded ' + file.name + ' · ' + entries.length + ' entries';
+      } else { alert('Invalid file format. Make sure it\'s your tracker-data.json file.'); }
+    } catch(err) { alert('Could not read file: ' + err.message); }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function exportJSON() {
+  const data = { entries, lastUpdated: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tracker-data.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.toLowerCase().includes(name)||
+    (name==='monthly'&&t.textContent.includes('Monthly'))||(name==='add'&&t.textContent.includes('Log'))||
+    (name==='history'&&t.textContent.includes('History'))||(name==='dashboard'&&t.textContent.includes('Dashboard'))) t.classList.add('active'); });
+  if(name==='monthly') renderMonthly();
+  if(name==='history') renderHistory();
+}
+
+// ── Entry Management ──────────────────────────────────────────────────────────
+function saveEntry() {
+  const weekOf = document.getElementById('f-weekOf').value;
+  const trialsRaw = document.getElementById('f-trials').value;
+  if (!weekOf || !trialsRaw) return;
+  const trialsSold = parseInt(trialsRaw)||0;
+  const adSpend = parseFloat(document.getElementById('f-adspend').value)||0;
+  const rollovers = parseInt(document.getElementById('f-rollovers').value)||0;
+  const totalMembers = parseInt(document.getElementById('f-members').value)||0;
+  const weeklyRevenue = parseFloat(document.getElementById('f-wrev').value)||0;
+  const notes = document.getElementById('f-notes').value;
+  const entry = {
+    id: editId || Date.now().toString(),
+    weekOf, trialsSold, trialRevenue: trialsSold*TRIAL_PRICE,
+    weeklyRevenue, adSpend, totalMembers, rollovers, notes,
+    cac: trialsSold>0 ? adSpend/trialsSold : null,
+    convRate: trialsSold>0 ? (rollovers/trialsSold)*100 : null,
+    roas: adSpend>0 ? (trialsSold*TRIAL_PRICE)/adSpend : null,
+  };
+  if (editId) { entries = entries.map(e=>e.id===editId?entry:e); editId=null; }
+  else { entries = [...entries, entry].sort((a,b)=>new Date(a.weekOf)-new Date(b.weekOf)); }
+  saveToStorage();
+  clearForm();
+  renderAll();
+  document.getElementById('saved-msg').style.display='inline';
+  setTimeout(()=>document.getElementById('saved-msg').style.display='none', 2500);
+}
+
+function editEntry(id) {
+  const e = entries.find(x=>x.id===id);
+  if (!e) return;
+  editId = id;
+  document.getElementById('f-weekOf').value = e.weekOf;
+  document.getElementById('f-trials').value = e.trialsSold;
+  document.getElementById('f-adspend').value = e.adSpend;
+  document.getElementById('f-members').value = e.totalMembers;
+  document.getElementById('f-rollovers').value = e.rollovers;
+  document.getElementById('f-wrev').value = e.weeklyRevenue||'';
+  document.getElementById('f-notes').value = e.notes||'';
+  document.getElementById('form-title').textContent = 'EDIT WEEK';
+  document.getElementById('save-btn').textContent = 'UPDATE WEEK';
+  document.getElementById('cancel-btn').style.display = 'inline-flex';
+  showPage('add');
+  updateCalc();
+}
+
+function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  entries = entries.filter(e=>e.id!==id);
+  saveToStorage();
+  renderAll();
+  renderHistory();
+}
+
+function cancelEdit() {
+  editId = null;
+  clearForm();
+  document.getElementById('form-title').textContent = 'LOG WEEK';
+  document.getElementById('save-btn').textContent = 'SAVE WEEK';
+  document.getElementById('cancel-btn').style.display = 'none';
+}
+
+function clearForm() {
+  ['f-weekOf','f-trials','f-adspend','f-members','f-rollovers','f-wrev','f-notes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('live-calc').style.display='none';
+  document.getElementById('trial-preview').textContent='';
+}
+
+// ── Live Calc ─────────────────────────────────────────────────────────────────
+function updateCalc() {
+  const t = parseFloat(document.getElementById('f-trials').value)||0;
+  const a = parseFloat(document.getElementById('f-adspend').value)||0;
+  const r = parseFloat(document.getElementById('f-rollovers').value)||0;
+  document.getElementById('trial-preview').textContent = t>0 ? `= ${fmt(t*TRIAL_PRICE)} trial revenue` : '';
+  const items = [];
+  if (t>0&&a>0) items.push({label:'CAC',val:'$'+(a/t).toFixed(2),sub:'per trial sold',color:'var(--yellow)'});
+  if (t>0&&a>0) items.push({label:'ROAS',val:((t*TRIAL_PRICE)/a).toFixed(2)+'x',sub:'on trial revenue',color:'var(--orange)'});
+  if (t>0&&r>=0&&r>0) items.push({label:'Conv. Rate',val:((r/t)*100).toFixed(1)+'%',sub:'trial → membership',color:'var(--purple)'});
+  const calc = document.getElementById('live-calc');
+  if (items.length) {
+    calc.style.display='flex';
+    calc.innerHTML = items.map(i=>`<div class="calc-item"><div class="calc-label">${i.label}</div><div class="calc-val" style="color:${i.color}">${i.val}</div><div class="calc-sub">${i.sub}</div></div>`).join('');
+  } else { calc.style.display='none'; }
+}
+
+// ── Monthly Data ──────────────────────────────────────────────────────────────
+function getMonthlyData() {
+  const acc = {};
+  entries.forEach(e => {
+    const k = getMonthKey(e.weekOf);
+    if (!acc[k]) acc[k]={key:k,label:getMonthLabel(k),rollovers:0,trialsSold:0,adSpend:0,trialRevenue:0,weeklyRevenue:0};
+    acc[k].rollovers+=e.rollovers; acc[k].trialsSold+=e.trialsSold;
+    acc[k].adSpend+=e.adSpend; acc[k].trialRevenue+=e.trialRevenue;
+    acc[k].weeklyRevenue+=(e.weeklyRevenue||0);
+  });
+  const months = Object.values(acc).sort((a,b)=>a.key.localeCompare(b.key));
+  months.forEach(m=>{ m.convRate = m.trialsSold>0 ? parseFloat(((m.rollovers/m.trialsSold)*100).toFixed(1)) : null; });
+  return months;
+}
+
+// ── Render All ────────────────────────────────────────────────────────────────
+function renderAll() {
+  updateHeader();
+  if (entries.length===0) {
+    document.getElementById('dashboard-empty').style.display='block';
+    document.getElementById('dashboard-content').style.display='none';
+    return;
+  }
+  document.getElementById('dashboard-empty').style.display='none';
+  document.getElementById('dashboard-content').style.display='block';
+  renderKPIs();
+  renderRevCard();
+  renderTotals();
+  renderCharts();
+}
+
+function updateHeader() {
+  const months = getMonthlyData();
+  document.getElementById('header-meta').textContent = entries.length + ' WEEKS · ' + months.length + ' MONTHS';
+  const total = entries.reduce((s,e)=>s+e.trialRevenue,0);
+  document.getElementById('header-total').textContent = fmt(total) + ' TRIAL REVENUE';
+}
+
+function renderKPIs() {
+  const last = entries[entries.length-1];
+  const prev = entries[entries.length-2];
+  const kpis = [
+    {label:'Trials Sold',val:last.trialsSold,sub:`${fmt(last.trialRevenue)} trial rev`,color:'var(--green)',chg:prev?pct(last.trialsSold,prev.trialsSold):null},
+    {label:'Ad Spend',val:fmt(last.adSpend),sub:'this week',color:'var(--orange)',chg:prev?pct(last.adSpend,prev.adSpend):null,inv:true},
+    {label:'CAC (per trial)',val:last.cac!=null?fmt(last.cac,'decimal'):'—',sub:'cost per trial sold',color:'var(--yellow)',chg:prev?.cac&&last.cac?pct(last.cac,prev.cac):null,inv:true},
+    {label:'Active Members',val:last.totalMembers||'—',sub:'total membership base',color:'var(--blue)',chg:prev?.totalMembers?pct(last.totalMembers,prev.totalMembers):null},
+    {label:'Rollovers This Wk',val:last.rollovers,sub:last.convRate!=null?fmt(last.convRate,'pct')+' conv. rate':'no ref',color:'var(--purple)',chg:prev?pct(last.rollovers,prev.rollovers):null},
+  ];
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k=>{
+    const up=k.chg!=null&&(k.inv?k.chg<0:k.chg>0), dn=k.chg!=null&&(k.inv?k.chg>0:k.chg<0);
+    const arrow = k.chg!=null ? `<span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(k.chg).toFixed(1)}%</span>` : '';
+    return `<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="color:${k.color}">${k.val}</div><div class="kpi-sub">${arrow}<span>${k.sub}</span></div></div>`;
+  }).join('');
+}
+
+function renderRevCard() {
+  const last = entries[entries.length-1];
+  const prev = entries[entries.length-2];
+  const totalWrev = entries.reduce((s,e)=>s+(e.weeklyRevenue||0),0);
+  const wrevCount = entries.filter(e=>e.weeklyRevenue>0).length;
+  let changeHtml = '';
+  if (last?.weeklyRevenue>0 && prev?.weeklyRevenue>0) {
+    const c = pct(last.weeklyRevenue,prev.weeklyRevenue);
+    if (c!=null) { const up=c>0; changeHtml=`<div class="rev-sub"><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(c).toFixed(1)}%</span> vs last week</div>`; }
+  }
+  document.getElementById('rev-card-wrap').innerHTML = `
+    <div class="rev-card" style="margin-bottom:24px">
+      <div>
+        <div class="rev-label">Weekly Revenue <span>— Total Business</span></div>
+        <div class="rev-val">${last?.weeklyRevenue>0?fmt(last.weeklyRevenue):'<span style="color:#2a4a2a;font-size:28px">NOT LOGGED YET</span>'}</div>
+        ${changeHtml}
+      </div>
+      <div class="rev-stats">
+        <div><div class="rev-stat-label">All-time Total</div><div class="rev-stat-val">${totalWrev>0?fmt(totalWrev):'—'}</div></div>
+        <div><div class="rev-stat-label">Avg / Week</div><div class="rev-stat-val">${wrevCount>0?fmt(totalWrev/wrevCount):'—'}</div></div>
+      </div>
+    </div>`;
+}
+
+function renderTotals() {
+  const tt=entries.reduce((s,e)=>s+e.trialsSold,0);
+  const tr=entries.reduce((s,e)=>s+e.trialRevenue,0);
+  const tw=entries.reduce((s,e)=>s+(e.weeklyRevenue||0),0);
+  const ts=entries.reduce((s,e)=>s+e.adSpend,0);
+  const troll=entries.reduce((s,e)=>s+e.rollovers,0);
+  const stats=[
+    {l:'Total Trials',v:tt.toLocaleString()},{l:'Total Trial Revenue',v:fmt(tr)},
+    {l:'Total Weekly Revenue',v:tw>0?fmt(tw):'—'},{l:'Total Ad Spend',v:fmt(ts)},
+    {l:'Overall ROAS',v:ts>0?fmt(tr/ts,'x'):'—'},{l:'Total Rollovers',v:troll.toLocaleString()},
+    {l:'All-time Conv. Rate',v:tt>0?fmt((troll/tt)*100,'pct'):'—'},
+    {l:'Blended CAC',v:tt>0?fmt(ts/tt,'decimal'):'—'},
+  ];
+  document.getElementById('totals-bar').innerHTML = stats.map(s=>`<div class="stat-item"><div class="stat-label">${s.l}</div><div class="stat-val">${s.v}</div></div>`).join('');
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+function destroyCharts() { Object.values(charts).forEach(c=>{try{c.destroy();}catch{}}); charts={}; }
+
+function makeChart(id, cfg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (charts[id]) { try{charts[id].destroy();}catch{} }
+  charts[id] = new Chart(el, cfg);
+}
+
+const axisDefaults = { grid:{color:'#0f1a0f'}, ticks:{color:'#7aaa7a',font:{family:'DM Mono, monospace',size:8}}, border:{display:false} };
+
+function renderCharts() {
+  destroyCharts();
+  const labels = entries.map(e=>weekLabel(e.weekOf));
+  const tt = {plugins:{tooltip:chartColors.tooltip,legend:{display:false}},scales:{x:{...axisDefaults},y:{...axisDefaults}}};
+
+  // Trials area
+  makeChart('chart-trials',{type:'line',data:{labels,datasets:[{label:'Trials Sold',data:entries.map(e=>e.trialsSold),borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.08)',fill:true,tension:0.3,pointBackgroundColor:'#4ade80',pointRadius:3}]},options:{...tt,plugins:{...tt.plugins}}});
+
+  // Weekly Revenue area
+  makeChart('chart-wrev',{type:'line',data:{labels,datasets:[{label:'Weekly Revenue',data:entries.map(e=>e.weeklyRevenue||null),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,0.1)',fill:true,tension:0.3,pointBackgroundColor:'#34d399',pointRadius:3,spanGaps:true}]},options:{...tt,scales:{x:{...axisDefaults},y:{...axisDefaults,ticks:{...axisDefaults.ticks,callback:v=>'$'+(v>=1000?(v/1000).toFixed(0)+'k':v)}}}}});
+
+  // Trials vs Rollovers bar
+  makeChart('chart-bar',{type:'bar',data:{labels,datasets:[{label:'Trials Sold',data:entries.map(e=>e.trialsSold),backgroundColor:'#1f3a1f',borderRadius:2},{label:'Rollovers',data:entries.map(e=>e.rollovers),backgroundColor:'#4ade80',borderRadius:2}]},options:{...tt,plugins:{...tt.plugins,legend:{display:false}}}});
+
+  // Conv rate area
+  makeChart('chart-conv',{type:'line',data:{labels,datasets:[{label:'Conv Rate',data:entries.map(e=>e.convRate!=null?parseFloat(e.convRate.toFixed(1)):null),borderColor:'#c084fc',backgroundColor:'rgba(192,132,252,0.1)',fill:true,tension:0.3,pointBackgroundColor:'#c084fc',pointRadius:3,spanGaps:true}]},options:{...tt,scales:{x:{...axisDefaults},y:{...axisDefaults,ticks:{...axisDefaults.ticks,callback:v=>v+'%'}}}}});
+
+  // CAC line
+  makeChart('chart-cac',{type:'line',data:{labels,datasets:[{label:'CAC',data:entries.map(e=>e.cac!=null?parseFloat(e.cac.toFixed(2)):null),borderColor:'#facc15',backgroundColor:'rgba(250,204,21,0.08)',tension:0.3,pointBackgroundColor:'#facc15',pointRadius:3,spanGaps:true}]},options:{...tt,scales:{x:{...axisDefaults},y:{...axisDefaults,ticks:{...axisDefaults.ticks,callback:v=>'$'+v}}}}});
+
+  // Members area
+  makeChart('chart-members',{type:'line',data:{labels,datasets:[{label:'Members',data:entries.map(e=>e.totalMembers||null),borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.1)',fill:true,tension:0.3,pointBackgroundColor:'#60a5fa',pointRadius:3,spanGaps:true}]},options:{...tt}});
+}
+
+// ── Monthly ───────────────────────────────────────────────────────────────────
+function renderMonthly() {
+  const months = getMonthlyData();
+  const el = document.getElementById('monthly-content');
+  if (!months.length) { el.innerHTML='<div class="no-data">No data yet.</div>'; return; }
+  let html = `<div class="month-table">
+    <div class="month-header"><div>Month</div><div>Trials</div><div>Rollovers</div><div>Conv. Rate</div><div>Ad Spend</div><div>Weekly Rev</div><div>Trial Revenue</div></div>`;
+  [...months].reverse().forEach(m=>{
+    const cv=m.convRate||0;
+    const col=cv>=30?'var(--green)':cv>=15?'var(--yellow)':'var(--red)';
+    html+=`<div class="month-row-data">
+      <div style="color:#8aaa8a;font-style:italic;font-size:11px">${m.label}</div>
+      <div class="mono-big" style="color:var(--green);font-size:22px">${m.trialsSold}</div>
+      <div class="mono-big" style="color:var(--purple);font-size:22px">${m.rollovers}</div>
+      <div>${m.convRate!=null?`<div style="color:${col};font-family:'Bebas Neue',sans-serif;font-size:14px">${m.convRate}%</div><div class="conv-bar-bg"><div class="conv-bar-fill" style="width:${Math.min(cv,100)}%"></div></div>`:'—'}</div>
+      <div style="color:var(--orange);font-size:11px">${fmt(m.adSpend)}</div>
+      <div style="color:var(--green2);font-size:11px">${m.weeklyRevenue>0?fmt(m.weeklyRevenue):'—'}</div>
+      <div style="color:var(--green);font-size:11px">${fmt(m.trialRevenue)}</div>
+    </div>`;
+  });
+  el.innerHTML = html + '</div>';
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  document.getElementById('history-count').textContent = entries.length + ' entries recorded';
+  const el = document.getElementById('history-content');
+  if (!entries.length) { el.innerHTML='<div class="no-data">No entries yet.</div>'; return; }
+  let html = `<div class="week-header"><div>Week Of</div><div>Trials</div><div>Trial Rev</div><div>Wkly Rev</div><div>Ad Spend</div><div>CAC</div><div>Members</div><div>Rollovers</div><div>Conv%</div><div></div></div>`;
+  [...entries].reverse().forEach(e=>{
+    const cc=e.convRate>=30?'var(--green)':e.convRate>=15?'var(--yellow)':e.convRate!=null?'var(--red)':'var(--sub)';
+    html+=`<div class="week-row-data">
+      <div style="color:#8aaa8a;font-size:10px">${fmtDate(e.weekOf)}</div>
+      <div class="mono-big" style="color:var(--green);font-size:20px">${e.trialsSold}</div>
+      <div style="color:#6a8a6a;font-size:10px">${fmt(e.trialRevenue)}</div>
+      <div style="color:var(--green2);font-size:10px">${e.weeklyRevenue>0?fmt(e.weeklyRevenue):'—'}</div>
+      <div style="color:var(--orange);font-size:10px">${fmt(e.adSpend)}</div>
+      <div style="color:var(--yellow);font-size:10px">${e.cac!=null?'$'+e.cac.toFixed(0):'—'}</div>
+      <div style="color:var(--blue);font-size:10px">${e.totalMembers||'—'}</div>
+      <div class="mono-big" style="color:var(--purple);font-size:20px">${e.rollovers}</div>
+      <div style="font-size:10px;color:${cc}">${e.convRate!=null?e.convRate.toFixed(0)+'%':'—'}</div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="editEntry('${e.id}')">edit</button>
+        <button class="btn-del" onclick="deleteEntry('${e.id}')">✕</button>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ── Auto-load tracker-data.json ──────────────────────────────────────────────
+async function autoLoadJSON() {
+  try {
+    const res = await fetch('tracker-data.json');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.entries && Array.isArray(data.entries)) {
+        entries = data.entries.sort((a,b) => new Date(a.weekOf)-new Date(b.weekOf));
+        saveToStorage();
+        renderAll();
+        document.getElementById('last-loaded').textContent = '✓ Auto-loaded tracker-data.json · ' + entries.length + ' entries';
+        return;
+      }
+    }
+  } catch(e) {}
+  // Fallback to localStorage if fetch fails
+  loadFromStorage();
+  renderAll();
+}
+autoLoadJSON();
+</script>
+</body>
+</html>
