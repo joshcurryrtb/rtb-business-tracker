@@ -144,6 +144,7 @@
   .no-data { color: var(--sub); font-size: 11px; text-align: center; padding: 60px 0; }
   #file-input { display: none; }
   .import-hint { font-size: 9px; color: var(--sub); letter-spacing: 1px; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
 </style>
 </head>
 <body>
@@ -182,6 +183,7 @@
     <div class="load-actions">
       <button class="btn btn-ghost green btn-sm" onclick="document.getElementById('file-input').click()">📂 Load tracker-data.json</button>
       <button class="btn btn-ghost btn-sm" onclick="exportJSON()">💾 Save tracker-data.json</button>
+      <button id="save-reminder" class="btn btn-sm" style="display:none;background:#ff4444;color:white;animation:pulse 1s infinite;" onclick="exportJSON()">⚠️ UNSAVED CHANGES — Click to Save</button>
       <span id="last-loaded" style="font-size:9px;color:var(--sub);"></span>
     </div>
   </div>
@@ -324,6 +326,9 @@ function loadFromStorage() {
 }
 function saveToStorage() {
   try { localStorage.setItem('tracker-v2', JSON.stringify(entries)); } catch{}
+  // Show save reminder after changes
+  var saveBtn = document.getElementById('save-reminder');
+  if (saveBtn) saveBtn.style.display = 'inline-block';
 }
 
 // ── JSON Import/Export ────────────────────────────────────────────────────────
@@ -354,6 +359,8 @@ function exportJSON() {
   a.download = 'tracker-data.json';
   a.click();
   URL.revokeObjectURL(a.href);
+  var saveBtn = document.getElementById('save-reminder');
+  if (saveBtn) saveBtn.style.display = 'none';
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
