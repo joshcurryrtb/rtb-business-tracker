@@ -277,7 +277,7 @@
 
         <div class="form-row">
           <div>
-            <div class="field-label">Silver ($57/wk)</div>
+            <div class="field-label">Silver ($59/wk)</div>
             <input type="number" class="inp" id="f-dm-silver" placeholder="0" oninput="updateCalc()">
           </div>
           <div>
@@ -423,7 +423,7 @@ function saveEntry() {
   const dmGold = parseInt(document.getElementById('f-dm-gold').value)||0;
   const dmBlack = parseInt(document.getElementById('f-dm-black').value)||0;
   const directMembers = dmSilver + dmGold + dmBlack;
-  const directMemberRevenue = (dmSilver*57) + (dmGold*79) + (dmBlack*89);
+  const directMemberRevenue = (dmSilver*59) + (dmGold*79) + (dmBlack*89);
   const weeklyRevenue = parseFloat(document.getElementById('f-wrev').value)||0;
   const notes = document.getElementById('f-notes').value;
   const entry = {
@@ -509,7 +509,7 @@ function updateCalc() {
   const ds=parseFloat(document.getElementById('f-dm-silver').value)||0;
   const dg=parseFloat(document.getElementById('f-dm-gold').value)||0;
   const db=parseFloat(document.getElementById('f-dm-black').value)||0;
-  const dmTotal=ds+dg+db, dmRev=(ds*57)+(dg*79)+(db*89);
+  const dmTotal=ds+dg+db, dmRev=(ds*59)+(dg*79)+(db*89);
   const dmPrev=document.getElementById('dm-preview');
   if(dmPrev) dmPrev.textContent=dmTotal>0?`= ${dmTotal} direct, ${fmt(dmRev)}/wk rev`:'';
   const calc = document.getElementById('live-calc');
