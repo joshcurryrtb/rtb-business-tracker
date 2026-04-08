@@ -83,7 +83,7 @@
       "totalMembers": 183,
       "rollovers": 2,
       "leads": 13,
-      "notes": "Recurring Billing \u2014 Windsor: 80, Chelsea Heights: 103. Ezy Pay settlement 1 Apr 2026. Chelsea Heights: $6,991 gross / $6,278.18 settled (102 invoices, $712.82 failed). Windsor: $7,409 gross / $6,300.39 settled (85 invoices, $1,108.61 failed).",
+      "notes": "Recurring Billing — Windsor: 80, Chelsea Heights: 103. Ezy Pay settlement 1 Apr 2026. Chelsea Heights: $6,991 gross / $6,278.18 settled (102 invoices, $712.82 failed). Windsor: $7,409 gross / $6,300.39 settled (85 invoices, $1,108.61 failed).",
       "cac": 107.84,
       "convRate": 25,
       "roas": 1.241,
@@ -97,7 +97,7 @@
       "trialRevenue": 750,
       "weeklyRevenue": 0,
       "adSpend": 946.06,
-      "totalMembers": 0,
+      "totalMembers": 184,
       "rollovers": 0,
       "leads": 8,
       "notes": "",
@@ -108,10 +108,10 @@
       "directMemberRevenue": 59,
       "cac": 189.212,
       "convRate": 0,
-      "roas": 0.7928615584635224,
+      "roas": 0.7927615584635225,
       "leadConvRate": 62.5,
       "costPerLead": 118.2575
     }
   ],
-  "lastUpdated": "2026-04-08T01:41:45.000Z"
+  "lastUpdated": "2026-04-08T01:44:19.654Z"
 }
