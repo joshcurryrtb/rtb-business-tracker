@@ -174,16 +174,16 @@
 
 <div class="main">
 
-  <!-- LOAD BAR — always visible -->
+  <!-- SAVE BAR -->
   <div class="load-bar">
     <div>
-      <div class="load-bar-text">📂 <span>Load tracker-data.json</span> after Cowork updates it, or save your changes back to the file.</div>
-      <div class="import-hint" style="margin-top:4px">Cowork edits tracker-data.json → click Load File → dashboard updates instantly</div>
+      <div class="load-bar-text" id="save-status-text">Auto-save: <span>connected</span></div>
+      <div class="import-hint" style="margin-top:4px" id="save-status-sub">Changes save automatically to the live site</div>
     </div>
     <div class="load-actions">
-      <button class="btn btn-ghost green btn-sm" onclick="document.getElementById('file-input').click()">📂 Load tracker-data.json</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportJSON()">💾 Save tracker-data.json</button>
-      <button id="save-reminder" class="btn btn-sm" style="display:none;background:#ff4444;color:white;animation:pulse 1s infinite;" onclick="exportJSON()">⚠️ UNSAVED CHANGES — Click to Save</button>
+      <button class="btn btn-ghost green btn-sm" onclick="saveToGitHub()">↑ Push Now</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('file-input').click()">📂 Load File</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportJSON()">💾 Download</button>
       <span id="last-loaded" style="font-size:9px;color:var(--sub);"></span>
     </div>
   </div>
@@ -360,9 +360,7 @@ function loadFromStorage() {
 }
 function saveToStorage() {
   try { localStorage.setItem('tracker-v2', JSON.stringify(entries)); } catch{}
-  // Show save reminder after changes
-  var saveBtn = document.getElementById('save-reminder');
-  if (saveBtn) saveBtn.style.display = 'inline-block';
+  queueGitHubSave();
 }
 
 // ── JSON Import/Export ────────────────────────────────────────────────────────
@@ -395,6 +393,64 @@ function exportJSON() {
   URL.revokeObjectURL(a.href);
   var saveBtn = document.getElementById('save-reminder');
   if (saveBtn) saveBtn.style.display = 'none';
+}
+
+// ── GitHub Auto-Save ─────────────────────────────────────────────────────────
+const GH_REPO = 'joshcurryrtb/rtb-business-tracker';
+const GH_FILE = 'tracker-data.json';
+let ghToken = localStorage.getItem('gh-tracker-token') || '';
+let ghSha = null;
+let saveTimeout = null;
+
+function setStatus(msg, color) {
+  const el = document.getElementById('save-status-text');
+  if (!el) return;
+  while (el.firstChild) el.removeChild(el.firstChild);
+  el.appendChild(document.createTextNode('Auto-save: '));
+  const span = document.createElement('span');
+  span.style.color = color || 'var(--green2)';
+  span.textContent = msg;
+  el.appendChild(span);
+}
+
+async function getFileSha() {
+  if (!ghToken) return null;
+  try {
+    const res = await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+      headers: { 'Authorization': 'Bearer ' + ghToken }
+    });
+    if (res.ok) { const d = await res.json(); ghSha = d.sha; return d.sha; }
+  } catch(e) {}
+  return null;
+}
+
+async function saveToGitHub() {
+  if (!ghToken) { setStatus('no token — use Download instead', 'var(--red)'); return; }
+  setStatus('saving...', 'var(--yellow)');
+  try {
+    if (!ghSha) await getFileSha();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ entries, lastUpdated: new Date().toISOString() }, null, 2))));
+    const body = { message: 'Update tracker data', content: content, sha: ghSha };
+    const res = await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + ghToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      const d = await res.json();
+      ghSha = d.content.sha;
+      setStatus('saved', 'var(--green)');
+      document.getElementById('last-loaded').textContent = 'Saved ' + new Date().toLocaleTimeString();
+    } else {
+      const err = await res.json();
+      setStatus('save failed', 'var(--red)');
+    }
+  } catch(e) { setStatus('save failed', 'var(--red)'); }
+}
+
+function queueGitHubSave() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveToGitHub, 2000);
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
@@ -729,16 +785,27 @@ async function autoLoadJSON() {
       const data = await res.json();
       if (data.entries && Array.isArray(data.entries)) {
         entries = data.entries.sort((a,b) => new Date(a.weekOf)-new Date(b.weekOf));
-        saveToStorage();
+        try { localStorage.setItem('tracker-v2', JSON.stringify(entries)); } catch{}
         renderAll();
-        document.getElementById('last-loaded').textContent = '✓ Auto-loaded tracker-data.json · ' + entries.length + ' entries';
-        return;
+        document.getElementById('last-loaded').textContent = 'Loaded ' + entries.length + ' entries';
       }
     }
-  } catch(e) {}
-  // Fallback to localStorage if fetch fails
-  loadFromStorage();
-  renderAll();
+  } catch(e) {
+    loadFromStorage();
+    renderAll();
+  }
+  // Init GitHub connection — prompt for token if not set
+  if (!ghToken) {
+    const t = prompt('Paste your GitHub token to enable auto-save (starts with github_pat_):');
+    if (t && t.startsWith('github_pat_')) { ghToken = t; localStorage.setItem('gh-tracker-token', t); }
+  }
+  if (ghToken) {
+    await getFileSha();
+    if (ghSha) setStatus('connected', 'var(--green)');
+    else setStatus('token error', 'var(--red)');
+  } else {
+    setStatus('no token set', 'var(--sub)');
+  }
 }
 autoLoadJSON();
 </script>
