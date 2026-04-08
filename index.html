@@ -58,7 +58,7 @@
 
   /* CARDS */
   .card { background: var(--bg2); border: 1px solid var(--border); padding: 20px 22px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 10px; }
   .kpi { background: var(--bg2); border: 1px solid var(--border); padding: 20px 22px; }
   .kpi-label { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
   .kpi-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 1px; line-height: 1; }
@@ -114,7 +114,7 @@
   .saved-msg { color: var(--green); font-size: 10px; letter-spacing: 1px; }
 
   /* HISTORY */
-  .week-header, .week-row-data { display: grid; grid-template-columns: 95px 50px 80px 88px 80px 65px 68px 62px 58px 80px; gap: 5px; padding: 11px 0; border-bottom: 1px solid #0d160d; align-items: center; font-size: 11px; }
+  .week-header, .week-row-data { display: grid; grid-template-columns: 95px 50px 80px 88px 80px 50px 55px 65px 68px 62px 58px 80px; gap: 5px; padding: 11px 0; border-bottom: 1px solid #0d160d; align-items: center; font-size: 11px; }
   .week-header { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 10px; border-color: #131d13; }
   .week-row-data:hover { background: var(--bg3); }
 
@@ -154,7 +154,7 @@
     <div class="header-top">
       <div>
         <div class="logo">PERFORMANCE TRACKER</div>
-        <div class="tagline">$150 TRIAL PACKS · MEMBERSHIPS · ROLLOVERS</div>
+        <div class="tagline">$150 TRIAL PACKS · LEADS · MEMBERSHIPS · ROLLOVERS</div>
       </div>
       <div class="header-right">
         <div class="weeks" id="header-meta">0 WEEKS · 0 MONTHS</div>
@@ -214,6 +214,10 @@
         <div class="card"><div class="section-label">CAC per Trial Sold</div><canvas id="chart-cac" height="150"></canvas></div>
         <div class="card"><div class="section-label">Active Members (Total)</div><canvas id="chart-members" height="150"></canvas></div>
       </div>
+      <div class="charts-2" style="margin-top:12px">
+        <div class="card"><div class="section-label">Leads per Week</div><canvas id="chart-leads" height="150"></canvas></div>
+        <div class="card"><div class="section-label">Cost per Lead</div><canvas id="chart-cpl" height="150"></canvas></div>
+      </div>
     </div>
   </div>
 
@@ -250,15 +254,23 @@
         </div>
         <div class="form-row">
           <div>
-            <div class="field-label">Total Active Members</div>
-            <input type="number" class="inp" id="f-members" placeholder="e.g. 84">
-            <div class="field-hint">Your full membership headcount</div>
+            <div class="field-label">Leads This Week</div>
+            <input type="number" class="inp" id="f-leads" placeholder="e.g. 10" oninput="updateCalc()">
+            <div class="field-hint">Total enquiries / leads generated</div>
           </div>
           <div>
             <div class="field-label">Rollovers This Week</div>
             <input type="number" class="inp" id="f-rollovers" placeholder="e.g. 4" oninput="updateCalc()">
             <div class="field-hint">Trials that became members</div>
           </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="field-label">Total Active Members</div>
+            <input type="number" class="inp" id="f-members" placeholder="e.g. 84">
+            <div class="field-hint">Your full membership headcount</div>
+          </div>
+          <div></div>
         </div>
 
         <div class="divider-label">▸ Weekly Revenue (Separate)</div>
@@ -382,6 +394,7 @@ function saveEntry() {
   if (!weekOf || !trialsRaw) return;
   const trialsSold = parseInt(trialsRaw)||0;
   const adSpend = parseFloat(document.getElementById('f-adspend').value)||0;
+  const leads = parseInt(document.getElementById('f-leads').value)||0;
   const rollovers = parseInt(document.getElementById('f-rollovers').value)||0;
   const totalMembers = parseInt(document.getElementById('f-members').value)||0;
   const weeklyRevenue = parseFloat(document.getElementById('f-wrev').value)||0;
@@ -389,10 +402,12 @@ function saveEntry() {
   const entry = {
     id: editId || Date.now().toString(),
     weekOf, trialsSold, trialRevenue: trialsSold*TRIAL_PRICE,
-    weeklyRevenue, adSpend, totalMembers, rollovers, notes,
+    weeklyRevenue, adSpend, totalMembers, rollovers, leads, notes,
     cac: trialsSold>0 ? adSpend/trialsSold : null,
     convRate: trialsSold>0 ? (rollovers/trialsSold)*100 : null,
     roas: adSpend>0 ? (trialsSold*TRIAL_PRICE)/adSpend : null,
+    leadConvRate: leads>0 ? (trialsSold/leads)*100 : null,
+    costPerLead: leads>0 ? adSpend/leads : null,
   };
   if (editId) { entries = entries.map(e=>e.id===editId?entry:e); editId=null; }
   else { entries = [...entries, entry].sort((a,b)=>new Date(a.weekOf)-new Date(b.weekOf)); }
@@ -410,6 +425,7 @@ function editEntry(id) {
   document.getElementById('f-weekOf').value = e.weekOf;
   document.getElementById('f-trials').value = e.trialsSold;
   document.getElementById('f-adspend').value = e.adSpend;
+  document.getElementById('f-leads').value = e.leads||'';
   document.getElementById('f-members').value = e.totalMembers;
   document.getElementById('f-rollovers').value = e.rollovers;
   document.getElementById('f-wrev').value = e.weeklyRevenue||'';
@@ -438,7 +454,7 @@ function cancelEdit() {
 }
 
 function clearForm() {
-  ['f-weekOf','f-trials','f-adspend','f-members','f-rollovers','f-wrev','f-notes'].forEach(id=>{
+  ['f-weekOf','f-trials','f-adspend','f-leads','f-members','f-rollovers','f-wrev','f-notes'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('live-calc').style.display='none';
@@ -450,11 +466,14 @@ function updateCalc() {
   const t = parseFloat(document.getElementById('f-trials').value)||0;
   const a = parseFloat(document.getElementById('f-adspend').value)||0;
   const r = parseFloat(document.getElementById('f-rollovers').value)||0;
+  const l = parseFloat(document.getElementById('f-leads').value)||0;
   document.getElementById('trial-preview').textContent = t>0 ? `= ${fmt(t*TRIAL_PRICE)} trial revenue` : '';
   const items = [];
   if (t>0&&a>0) items.push({label:'CAC',val:'$'+(a/t).toFixed(2),sub:'per trial sold',color:'var(--yellow)'});
   if (t>0&&a>0) items.push({label:'ROAS',val:((t*TRIAL_PRICE)/a).toFixed(2)+'x',sub:'on trial revenue',color:'var(--orange)'});
   if (t>0&&r>=0&&r>0) items.push({label:'Conv. Rate',val:((r/t)*100).toFixed(1)+'%',sub:'trial → membership',color:'var(--purple)'});
+  if (l>0&&a>0) items.push({label:'Cost/Lead',val:'$'+(a/l).toFixed(2),sub:'per lead',color:'var(--text-bright)'});
+  if (l>0&&t>0) items.push({label:'Lead Conv.',val:((t/l)*100).toFixed(1)+'%',sub:'lead → trial',color:'var(--green2)'});
   const calc = document.getElementById('live-calc');
   if (items.length) {
     calc.style.display='flex';
@@ -467,10 +486,10 @@ function getMonthlyData() {
   const acc = {};
   entries.forEach(e => {
     const k = getMonthKey(e.weekOf);
-    if (!acc[k]) acc[k]={key:k,label:getMonthLabel(k),rollovers:0,trialsSold:0,adSpend:0,trialRevenue:0,weeklyRevenue:0};
+    if (!acc[k]) acc[k]={key:k,label:getMonthLabel(k),rollovers:0,trialsSold:0,adSpend:0,trialRevenue:0,weeklyRevenue:0,leads:0};
     acc[k].rollovers+=e.rollovers; acc[k].trialsSold+=e.trialsSold;
     acc[k].adSpend+=e.adSpend; acc[k].trialRevenue+=e.trialRevenue;
-    acc[k].weeklyRevenue+=(e.weeklyRevenue||0);
+    acc[k].weeklyRevenue+=(e.weeklyRevenue||0); acc[k].leads+=(e.leads||0);
   });
   const months = Object.values(acc).sort((a,b)=>a.key.localeCompare(b.key));
   months.forEach(m=>{ m.convRate = m.trialsSold>0 ? parseFloat(((m.rollovers/m.trialsSold)*100).toFixed(1)) : null; });
@@ -507,6 +526,7 @@ function renderKPIs() {
     {label:'Trials Sold',val:last.trialsSold,sub:`${fmt(last.trialRevenue)} trial rev`,color:'var(--green)',chg:prev?pct(last.trialsSold,prev.trialsSold):null},
     {label:'Ad Spend',val:fmt(last.adSpend),sub:'this week',color:'var(--orange)',chg:prev?pct(last.adSpend,prev.adSpend):null,inv:true},
     {label:'CAC (per trial)',val:last.cac!=null?fmt(last.cac,'decimal'):'—',sub:'cost per trial sold',color:'var(--yellow)',chg:prev?.cac&&last.cac?pct(last.cac,prev.cac):null,inv:true},
+    {label:'Leads',val:last.leads||'—',sub:last.costPerLead!=null?fmt(last.costPerLead,'decimal')+' per lead':'no ad data',color:'var(--text-bright)',chg:prev?.leads?pct(last.leads,prev.leads):null},
     {label:'Active Members',val:last.totalMembers||'—',sub:'total membership base',color:'var(--blue)',chg:prev?.totalMembers?pct(last.totalMembers,prev.totalMembers):null},
     {label:'Rollovers This Wk',val:last.rollovers,sub:last.convRate!=null?fmt(last.convRate,'pct')+' conv. rate':'no ref',color:'var(--purple)',chg:prev?pct(last.rollovers,prev.rollovers):null},
   ];
@@ -547,10 +567,13 @@ function renderTotals() {
   const tw=entries.reduce((s,e)=>s+(e.weeklyRevenue||0),0);
   const ts=entries.reduce((s,e)=>s+e.adSpend,0);
   const troll=entries.reduce((s,e)=>s+e.rollovers,0);
+  const tl=entries.reduce((s,e)=>s+(e.leads||0),0);
   const stats=[
     {l:'Total Trials',v:tt.toLocaleString()},{l:'Total Trial Revenue',v:fmt(tr)},
     {l:'Total Weekly Revenue',v:tw>0?fmt(tw):'—'},{l:'Total Ad Spend',v:fmt(ts)},
-    {l:'Overall ROAS',v:ts>0?fmt(tr/ts,'x'):'—'},{l:'Total Rollovers',v:troll.toLocaleString()},
+    {l:'Overall ROAS',v:ts>0?fmt(tr/ts,'x'):'—'},{l:'Total Leads',v:tl>0?tl.toLocaleString():'—'},
+    {l:'Blended Cost/Lead',v:tl>0?fmt(ts/tl,'decimal'):'—'},{l:'Lead → Trial Conv.',v:tl>0?fmt((tt/tl)*100,'pct'):'—'},
+    {l:'Total Rollovers',v:troll.toLocaleString()},
     {l:'All-time Conv. Rate',v:tt>0?fmt((troll/tt)*100,'pct'):'—'},
     {l:'Blended CAC',v:tt>0?fmt(ts/tt,'decimal'):'—'},
   ];
@@ -591,6 +614,12 @@ function renderCharts() {
 
   // Members area
   makeChart('chart-members',{type:'line',data:{labels,datasets:[{label:'Members',data:entries.map(e=>e.totalMembers||null),borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.1)',fill:true,tension:0.3,pointBackgroundColor:'#60a5fa',pointRadius:3,spanGaps:true}]},options:{...tt}});
+
+  // Leads bar
+  makeChart('chart-leads',{type:'bar',data:{labels,datasets:[{label:'Leads',data:entries.map(e=>e.leads||null),backgroundColor:'#e8f0e8',borderRadius:2}]},options:{...tt}});
+
+  // Cost per lead line
+  makeChart('chart-cpl',{type:'line',data:{labels,datasets:[{label:'Cost/Lead',data:entries.map(e=>e.costPerLead!=null?parseFloat(e.costPerLead.toFixed(2)):null),borderColor:'#e8f0e8',backgroundColor:'rgba(232,240,232,0.08)',tension:0.3,pointBackgroundColor:'#e8f0e8',pointRadius:3,spanGaps:true}]},options:{...tt,scales:{x:{...axisDefaults},y:{...axisDefaults,ticks:{...axisDefaults.ticks,callback:v=>'$'+v}}}}});
 }
 
 // ── Monthly ───────────────────────────────────────────────────────────────────
@@ -621,7 +650,7 @@ function renderHistory() {
   document.getElementById('history-count').textContent = entries.length + ' entries recorded';
   const el = document.getElementById('history-content');
   if (!entries.length) { el.innerHTML='<div class="no-data">No entries yet.</div>'; return; }
-  let html = `<div class="week-header"><div>Week Of</div><div>Trials</div><div>Trial Rev</div><div>Wkly Rev</div><div>Ad Spend</div><div>CAC</div><div>Members</div><div>Rollovers</div><div>Conv%</div><div></div></div>`;
+  let html = `<div class="week-header"><div>Week Of</div><div>Trials</div><div>Trial Rev</div><div>Wkly Rev</div><div>Ad Spend</div><div>Leads</div><div>$/Lead</div><div>CAC</div><div>Members</div><div>Rollovers</div><div>Conv%</div><div></div></div>`;
   [...entries].reverse().forEach(e=>{
     const cc=e.convRate>=30?'var(--green)':e.convRate>=15?'var(--yellow)':e.convRate!=null?'var(--red)':'var(--sub)';
     html+=`<div class="week-row-data">
@@ -630,6 +659,8 @@ function renderHistory() {
       <div style="color:#6a8a6a;font-size:10px">${fmt(e.trialRevenue)}</div>
       <div style="color:var(--green2);font-size:10px">${e.weeklyRevenue>0?fmt(e.weeklyRevenue):'—'}</div>
       <div style="color:var(--orange);font-size:10px">${fmt(e.adSpend)}</div>
+      <div style="font-size:10px;color:var(--text-bright)">${e.leads||'—'}</div>
+      <div style="font-size:10px;color:var(--text-bright)">${e.costPerLead!=null?'$'+e.costPerLead.toFixed(0):'—'}</div>
       <div style="color:var(--yellow);font-size:10px">${e.cac!=null?'$'+e.cac.toFixed(0):'—'}</div>
       <div style="color:var(--blue);font-size:10px">${e.totalMembers||'—'}</div>
       <div class="mono-big" style="color:var(--purple);font-size:20px">${e.rollovers}</div>
