@@ -182,6 +182,7 @@
     </div>
     <div class="load-actions">
       <button class="btn btn-ghost green btn-sm" onclick="saveToGitHub()">↑ Push Now</button>
+      <button class="btn btn-ghost btn-sm" onclick="pullFromGitHub()">↓ Pull Latest</button>
       <button class="btn btn-ghost btn-sm" onclick="document.getElementById('file-input').click()">📂 Load File</button>
       <button class="btn btn-ghost btn-sm" onclick="exportJSON()">💾 Download</button>
       <span id="last-loaded" style="font-size:9px;color:var(--sub);"></span>
@@ -446,6 +447,29 @@ async function saveToGitHub() {
       setStatus('save failed', 'var(--red)');
     }
   } catch(e) { setStatus('save failed', 'var(--red)'); }
+}
+
+async function pullFromGitHub() {
+  if (!ghToken) { setStatus('no token — cannot pull', 'var(--red)'); return; }
+  setStatus('pulling...', 'var(--yellow)');
+  try {
+    const res = await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+      headers: { 'Authorization': 'Bearer ' + ghToken, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) {
+      const d = await res.json();
+      ghSha = d.sha;
+      const raw = decodeURIComponent(escape(atob(d.content.replace(/\n/g, ''))));
+      const data = JSON.parse(raw);
+      if (data.entries && Array.isArray(data.entries)) {
+        entries = data.entries.sort((a,b) => new Date(a.weekOf)-new Date(b.weekOf));
+        try { localStorage.setItem('tracker-v2', JSON.stringify(entries)); } catch{}
+        renderAll();
+        setStatus('connected', 'var(--green)');
+        document.getElementById('last-loaded').textContent = 'Pulled ' + entries.length + ' entries · ' + new Date().toLocaleTimeString();
+      }
+    } else { setStatus('pull failed', 'var(--red)'); }
+  } catch(e) { setStatus('pull failed', 'var(--red)'); }
 }
 
 function queueGitHubSave() {
