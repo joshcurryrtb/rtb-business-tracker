@@ -58,7 +58,7 @@
 
   /* CARDS */
   .card { background: var(--bg2); border: 1px solid var(--border); padding: 20px 22px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 10px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
   .kpi { background: var(--bg2); border: 1px solid var(--border); padding: 20px 22px; }
   .kpi-label { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
   .kpi-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 1px; line-height: 1; }
@@ -114,7 +114,7 @@
   .saved-msg { color: var(--green); font-size: 10px; letter-spacing: 1px; }
 
   /* HISTORY */
-  .week-header, .week-row-data { display: grid; grid-template-columns: 95px 50px 80px 88px 80px 50px 55px 65px 68px 62px 58px 80px; gap: 5px; padding: 11px 0; border-bottom: 1px solid #0d160d; align-items: center; font-size: 11px; }
+  .week-header, .week-row-data { display: grid; grid-template-columns: 85px 45px 70px 78px 70px 42px 50px 55px 60px 72px 55px 50px 70px; gap: 4px; padding: 11px 0; border-bottom: 1px solid #0d160d; align-items: center; font-size: 11px; }
   .week-header { font-size: 8px; color: var(--lbl); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 10px; border-color: #131d13; }
   .week-row-data:hover { background: var(--bg3); }
 
@@ -273,6 +273,28 @@
           <div></div>
         </div>
 
+        <div class="divider-label">▸ Direct Members (skipped trial)</div>
+
+        <div class="form-row">
+          <div>
+            <div class="field-label">Silver ($57/wk)</div>
+            <input type="number" class="inp" id="f-dm-silver" placeholder="0" oninput="updateCalc()">
+          </div>
+          <div>
+            <div class="field-label">Gold ($79/wk)</div>
+            <input type="number" class="inp" id="f-dm-gold" placeholder="0" oninput="updateCalc()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="field-label">Black ($89/wk)</div>
+            <input type="number" class="inp" id="f-dm-black" placeholder="0" oninput="updateCalc()">
+          </div>
+          <div>
+            <div class="field-preview" id="dm-preview" style="margin-top:22px"></div>
+          </div>
+        </div>
+
         <div class="divider-label">▸ Weekly Revenue (Separate)</div>
 
         <div>
@@ -397,12 +419,18 @@ function saveEntry() {
   const leads = parseInt(document.getElementById('f-leads').value)||0;
   const rollovers = parseInt(document.getElementById('f-rollovers').value)||0;
   const totalMembers = parseInt(document.getElementById('f-members').value)||0;
+  const dmSilver = parseInt(document.getElementById('f-dm-silver').value)||0;
+  const dmGold = parseInt(document.getElementById('f-dm-gold').value)||0;
+  const dmBlack = parseInt(document.getElementById('f-dm-black').value)||0;
+  const directMembers = dmSilver + dmGold + dmBlack;
+  const directMemberRevenue = (dmSilver*57) + (dmGold*79) + (dmBlack*89);
   const weeklyRevenue = parseFloat(document.getElementById('f-wrev').value)||0;
   const notes = document.getElementById('f-notes').value;
   const entry = {
     id: editId || Date.now().toString(),
     weekOf, trialsSold, trialRevenue: trialsSold*TRIAL_PRICE,
     weeklyRevenue, adSpend, totalMembers, rollovers, leads, notes,
+    dmSilver, dmGold, dmBlack, directMembers, directMemberRevenue,
     cac: trialsSold>0 ? adSpend/trialsSold : null,
     convRate: trialsSold>0 ? (rollovers/trialsSold)*100 : null,
     roas: adSpend>0 ? (trialsSold*TRIAL_PRICE)/adSpend : null,
@@ -428,6 +456,9 @@ function editEntry(id) {
   document.getElementById('f-leads').value = e.leads||'';
   document.getElementById('f-members').value = e.totalMembers;
   document.getElementById('f-rollovers').value = e.rollovers;
+  document.getElementById('f-dm-silver').value = e.dmSilver||'';
+  document.getElementById('f-dm-gold').value = e.dmGold||'';
+  document.getElementById('f-dm-black').value = e.dmBlack||'';
   document.getElementById('f-wrev').value = e.weeklyRevenue||'';
   document.getElementById('f-notes').value = e.notes||'';
   document.getElementById('form-title').textContent = 'EDIT WEEK';
@@ -454,7 +485,7 @@ function cancelEdit() {
 }
 
 function clearForm() {
-  ['f-weekOf','f-trials','f-adspend','f-leads','f-members','f-rollovers','f-wrev','f-notes'].forEach(id=>{
+  ['f-weekOf','f-trials','f-adspend','f-leads','f-members','f-rollovers','f-dm-silver','f-dm-gold','f-dm-black','f-wrev','f-notes'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('live-calc').style.display='none';
@@ -474,6 +505,13 @@ function updateCalc() {
   if (t>0&&r>=0&&r>0) items.push({label:'Conv. Rate',val:((r/t)*100).toFixed(1)+'%',sub:'trial → membership',color:'var(--purple)'});
   if (l>0&&a>0) items.push({label:'Cost/Lead',val:'$'+(a/l).toFixed(2),sub:'per lead',color:'var(--text-bright)'});
   if (l>0&&t>0) items.push({label:'Lead Conv.',val:((t/l)*100).toFixed(1)+'%',sub:'lead → trial',color:'var(--green2)'});
+  // Direct members preview
+  const ds=parseFloat(document.getElementById('f-dm-silver').value)||0;
+  const dg=parseFloat(document.getElementById('f-dm-gold').value)||0;
+  const db=parseFloat(document.getElementById('f-dm-black').value)||0;
+  const dmTotal=ds+dg+db, dmRev=(ds*57)+(dg*79)+(db*89);
+  const dmPrev=document.getElementById('dm-preview');
+  if(dmPrev) dmPrev.textContent=dmTotal>0?`= ${dmTotal} direct, ${fmt(dmRev)}/wk rev`:'';
   const calc = document.getElementById('live-calc');
   if (items.length) {
     calc.style.display='flex';
@@ -522,13 +560,16 @@ function updateHeader() {
 function renderKPIs() {
   const last = entries[entries.length-1];
   const prev = entries[entries.length-2];
+  const dmBreakdown = last.directMembers>0 ? `${last.dmSilver||0}S ${last.dmGold||0}G ${last.dmBlack||0}B` : '';
   const kpis = [
     {label:'Trials Sold',val:last.trialsSold,sub:`${fmt(last.trialRevenue)} trial rev`,color:'var(--green)',chg:prev?pct(last.trialsSold,prev.trialsSold):null},
+    {label:'Leads',val:last.leads||'—',sub:last.costPerLead!=null?fmt(last.costPerLead,'decimal')+' per lead':'—',color:'var(--text-bright)',chg:prev?.leads?pct(last.leads,prev.leads):null},
     {label:'Ad Spend',val:fmt(last.adSpend),sub:'this week',color:'var(--orange)',chg:prev?pct(last.adSpend,prev.adSpend):null,inv:true},
     {label:'CAC (per trial)',val:last.cac!=null?fmt(last.cac,'decimal'):'—',sub:'cost per trial sold',color:'var(--yellow)',chg:prev?.cac&&last.cac?pct(last.cac,prev.cac):null,inv:true},
-    {label:'Leads',val:last.leads||'—',sub:last.costPerLead!=null?fmt(last.costPerLead,'decimal')+' per lead':'no ad data',color:'var(--text-bright)',chg:prev?.leads?pct(last.leads,prev.leads):null},
+    {label:'Direct Members',val:last.directMembers||0,sub:last.directMembers>0?`${dmBreakdown} · ${fmt(last.directMemberRevenue)}/wk`:'none this week',color:'var(--green2)',chg:prev?.directMembers?pct(last.directMembers,prev.directMembers):null},
+    {label:'Rollovers',val:last.rollovers,sub:last.convRate!=null?fmt(last.convRate,'pct')+' conv. rate':'no ref',color:'var(--purple)',chg:prev?pct(last.rollovers,prev.rollovers):null},
     {label:'Active Members',val:last.totalMembers||'—',sub:'total membership base',color:'var(--blue)',chg:prev?.totalMembers?pct(last.totalMembers,prev.totalMembers):null},
-    {label:'Rollovers This Wk',val:last.rollovers,sub:last.convRate!=null?fmt(last.convRate,'pct')+' conv. rate':'no ref',color:'var(--purple)',chg:prev?pct(last.rollovers,prev.rollovers):null},
+    {label:'ROAS',val:last.roas!=null?fmt(last.roas,'x'):'—',sub:'return on ad spend',color:'var(--orange)',chg:prev?.roas&&last.roas?pct(last.roas,prev.roas):null},
   ];
   document.getElementById('kpi-grid').innerHTML = kpis.map(k=>{
     const up=k.chg!=null&&(k.inv?k.chg<0:k.chg>0), dn=k.chg!=null&&(k.inv?k.chg>0:k.chg<0);
@@ -568,14 +609,18 @@ function renderTotals() {
   const ts=entries.reduce((s,e)=>s+e.adSpend,0);
   const troll=entries.reduce((s,e)=>s+e.rollovers,0);
   const tl=entries.reduce((s,e)=>s+(e.leads||0),0);
+  const tdm=entries.reduce((s,e)=>s+(e.directMembers||0),0);
+  const tdmr=entries.reduce((s,e)=>s+(e.directMemberRevenue||0),0);
+  const tdms=entries.reduce((s,e)=>s+(e.dmSilver||0),0);
+  const tdmg=entries.reduce((s,e)=>s+(e.dmGold||0),0);
+  const tdmb=entries.reduce((s,e)=>s+(e.dmBlack||0),0);
   const stats=[
     {l:'Total Trials',v:tt.toLocaleString()},{l:'Total Trial Revenue',v:fmt(tr)},
-    {l:'Total Weekly Revenue',v:tw>0?fmt(tw):'—'},{l:'Total Ad Spend',v:fmt(ts)},
-    {l:'Overall ROAS',v:ts>0?fmt(tr/ts,'x'):'—'},{l:'Total Leads',v:tl>0?tl.toLocaleString():'—'},
-    {l:'Blended Cost/Lead',v:tl>0?fmt(ts/tl,'decimal'):'—'},{l:'Lead → Trial Conv.',v:tl>0?fmt((tt/tl)*100,'pct'):'—'},
-    {l:'Total Rollovers',v:troll.toLocaleString()},
-    {l:'All-time Conv. Rate',v:tt>0?fmt((troll/tt)*100,'pct'):'—'},
-    {l:'Blended CAC',v:tt>0?fmt(ts/tt,'decimal'):'—'},
+    {l:'Total Leads',v:tl>0?tl.toLocaleString():'—'},{l:'Blended Cost/Lead',v:tl>0?fmt(ts/tl,'decimal'):'—'},
+    {l:'Total Ad Spend',v:fmt(ts)},{l:'Overall ROAS',v:ts>0?fmt(tr/ts,'x'):'—'},
+    {l:'Direct Members',v:tdm>0?`${tdm} (${tdms}S ${tdmg}G ${tdmb}B)`:'—'},{l:'Direct Rev/Wk',v:tdmr>0?fmt(tdmr):'—'},
+    {l:'Total Rollovers',v:troll.toLocaleString()},{l:'All-time Conv. Rate',v:tt>0?fmt((troll/tt)*100,'pct'):'—'},
+    {l:'Total Weekly Revenue',v:tw>0?fmt(tw):'—'},{l:'Blended CAC',v:tt>0?fmt(ts/tt,'decimal'):'—'},
   ];
   document.getElementById('totals-bar').innerHTML = stats.map(s=>`<div class="stat-item"><div class="stat-label">${s.l}</div><div class="stat-val">${s.v}</div></div>`).join('');
 }
@@ -650,9 +695,10 @@ function renderHistory() {
   document.getElementById('history-count').textContent = entries.length + ' entries recorded';
   const el = document.getElementById('history-content');
   if (!entries.length) { el.innerHTML='<div class="no-data">No entries yet.</div>'; return; }
-  let html = `<div class="week-header"><div>Week Of</div><div>Trials</div><div>Trial Rev</div><div>Wkly Rev</div><div>Ad Spend</div><div>Leads</div><div>$/Lead</div><div>CAC</div><div>Members</div><div>Rollovers</div><div>Conv%</div><div></div></div>`;
+  let html = `<div class="week-header"><div>Week Of</div><div>Trials</div><div>Trial Rev</div><div>Wkly Rev</div><div>Ad Spend</div><div>Leads</div><div>$/Lead</div><div>CAC</div><div>Members</div><div>Direct</div><div>Rollovers</div><div>Conv%</div><div></div></div>`;
   [...entries].reverse().forEach(e=>{
     const cc=e.convRate>=30?'var(--green)':e.convRate>=15?'var(--yellow)':e.convRate!=null?'var(--red)':'var(--sub)';
+    const dmLabel=e.directMembers>0?`${e.dmSilver||0}S${e.dmGold||0}G${e.dmBlack||0}B`:'—';
     html+=`<div class="week-row-data">
       <div style="color:#8aaa8a;font-size:10px">${fmtDate(e.weekOf)}</div>
       <div class="mono-big" style="color:var(--green);font-size:20px">${e.trialsSold}</div>
@@ -663,6 +709,7 @@ function renderHistory() {
       <div style="font-size:10px;color:var(--text-bright)">${e.costPerLead!=null?'$'+e.costPerLead.toFixed(0):'—'}</div>
       <div style="color:var(--yellow);font-size:10px">${e.cac!=null?'$'+e.cac.toFixed(0):'—'}</div>
       <div style="color:var(--blue);font-size:10px">${e.totalMembers||'—'}</div>
+      <div style="color:var(--green2);font-size:9px">${dmLabel}</div>
       <div class="mono-big" style="color:var(--purple);font-size:20px">${e.rollovers}</div>
       <div style="font-size:10px;color:${cc}">${e.convRate!=null?e.convRate.toFixed(0)+'%':'—'}</div>
       <div style="display:flex;gap:4px">
