@@ -96,7 +96,7 @@
       "trialsSold": 6,
       "trialRevenue": 900,
       "weeklyRevenue": 10641.25,
-      "adSpend": 946.06,
+      "adSpend": 1816.66,
       "totalMembers": 185,
       "rollovers": 2,
       "leads": 9,
@@ -106,12 +106,12 @@
       "dmBlack": 0,
       "directMembers": 2,
       "directMemberRevenue": 118,
-      "cac": 157.67666666666665,
+      "cac": 302.7766666666667,
       "convRate": 33.33333333333333,
-      "roas": 0.9513138701562269,
+      "roas": 0.49541466207215434,
       "leadConvRate": 66.66666666666666,
-      "costPerLead": 105.11777777777777
+      "costPerLead": 201.85111111111112
     }
   ],
-  "lastUpdated": "2026-04-09T12:03:03.616Z"
+  "lastUpdated": "2026-04-12T21:55:06.923Z"
 }
