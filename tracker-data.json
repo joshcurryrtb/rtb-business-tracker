@@ -111,7 +111,29 @@
       "roas": 0.49541466207215434,
       "leadConvRate": 66.66666666666666,
       "costPerLead": 201.85111111111112
+    },
+    {
+      "id": "1776127549361",
+      "weekOf": "2026-04-13",
+      "trialsSold": 1,
+      "trialRevenue": 150,
+      "weeklyRevenue": 0,
+      "adSpend": 0,
+      "totalMembers": 189,
+      "rollovers": 4,
+      "leads": 3,
+      "notes": "",
+      "dmSilver": 3,
+      "dmGold": 1,
+      "dmBlack": 0,
+      "directMembers": 4,
+      "directMemberRevenue": 256,
+      "cac": 0,
+      "convRate": 400,
+      "roas": null,
+      "leadConvRate": 33.33333333333333,
+      "costPerLead": 0
     }
   ],
-  "lastUpdated": "2026-04-12T21:55:06.923Z"
+  "lastUpdated": "2026-04-14T00:45:51.363Z"
 }
