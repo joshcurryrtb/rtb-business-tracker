@@ -98,7 +98,7 @@
       "weeklyRevenue": 10641.25,
       "adSpend": 1816.66,
       "totalMembers": 185,
-      "rollovers": 2,
+      "rollovers": 5,
       "leads": 9,
       "notes": "Ezy Pay settlement 8 Apr 2026. Windsor: $5,815 gross / $5,098.77 settled ($589 failed). Chelsea Heights: $5,808 gross / $5,542.48 settled ($134 failed).",
       "dmSilver": 2,
@@ -107,7 +107,7 @@
       "directMembers": 2,
       "directMemberRevenue": 118,
       "cac": 302.7766666666667,
-      "convRate": 33.33333333333333,
+      "convRate": 83.33333333333334,
       "roas": 0.49541466207215434,
       "leadConvRate": 66.66666666666666,
       "costPerLead": 201.85111111111112
@@ -135,5 +135,5 @@
       "costPerLead": 0
     }
   ],
-  "lastUpdated": "2026-04-14T00:45:51.363Z"
+  "lastUpdated": "2026-04-14T00:46:24.216Z"
 }
