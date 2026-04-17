@@ -117,7 +117,7 @@
       "weekOf": "2026-04-13",
       "trialsSold": 2,
       "trialRevenue": 300,
-      "weeklyRevenue": 0,
+      "weeklyRevenue": 12800,
       "adSpend": 633.63,
       "totalMembers": 189,
       "rollovers": 4,
@@ -135,5 +135,5 @@
       "costPerLead": 211.21
     }
   ],
-  "lastUpdated": "2026-04-14T09:29:03.452Z"
+  "lastUpdated": "2026-04-17T02:26:49.607Z"
 }
