@@ -142,7 +142,7 @@
       "weeklyRevenue": 0,
       "adSpend": 1007.36,
       "totalMembers": 188,
-      "rollovers": 0,
+      "rollovers": 1,
       "leads": 12,
       "notes": "",
       "dmSilver": 0,
@@ -151,11 +151,11 @@
       "directMembers": 0,
       "directMemberRevenue": 0,
       "cac": 201.472,
-      "convRate": 0,
+      "convRate": 20,
       "roas": 0.744520330368488,
       "leadConvRate": 41.66666666666667,
       "costPerLead": 83.94666666666667
     }
   ],
-  "lastUpdated": "2026-04-24T02:36:51.881Z"
+  "lastUpdated": "2026-04-24T02:45:10.876Z"
 }
