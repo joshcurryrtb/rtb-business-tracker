@@ -165,7 +165,7 @@
       "adSpend": 506.47,
       "totalMembers": 0,
       "rollovers": 0,
-      "leads": 9,
+      "leads": 11,
       "notes": "",
       "dmSilver": 0,
       "dmGold": 0,
@@ -175,9 +175,9 @@
       "cac": 101.29400000000001,
       "convRate": 0,
       "roas": 1.4808379568385095,
-      "leadConvRate": 55.55555555555556,
-      "costPerLead": 56.27444444444445
+      "leadConvRate": 45.45454545454545,
+      "costPerLead": 46.04272727272728
     }
   ],
-  "lastUpdated": "2026-04-27T06:09:14.566Z"
+  "lastUpdated": "2026-04-27T06:28:16.079Z"
 }
