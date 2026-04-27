@@ -159,8 +159,8 @@
     {
       "id": "1777266602237",
       "weekOf": "2026-04-27",
-      "trialsSold": 4,
-      "trialRevenue": 600,
+      "trialsSold": 5,
+      "trialRevenue": 750,
       "weeklyRevenue": 0,
       "adSpend": 506.47,
       "totalMembers": 0,
@@ -172,12 +172,12 @@
       "dmBlack": 0,
       "directMembers": 0,
       "directMemberRevenue": 0,
-      "cac": 126.6175,
+      "cac": 101.29400000000001,
       "convRate": 0,
-      "roas": 1.1846703654708077,
-      "leadConvRate": 44.44444444444444,
+      "roas": 1.4808379568385095,
+      "leadConvRate": 55.55555555555556,
       "costPerLead": 56.27444444444445
     }
   ],
-  "lastUpdated": "2026-04-27T05:32:09.786Z"
+  "lastUpdated": "2026-04-27T06:09:14.566Z"
 }
